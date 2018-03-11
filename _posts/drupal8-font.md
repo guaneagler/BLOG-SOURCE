@@ -2,7 +2,7 @@
 title: Drupal8 font
 date: 2017-11-12 14:56:45
 categories:
-  - Drupal8
+  - Drupal
 tags:
   - font
   - drupal8

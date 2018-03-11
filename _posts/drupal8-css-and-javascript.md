@@ -2,7 +2,7 @@
 title: Drupal8 Css and Javascript
 date: 2017-11-16 17:55:13
 categories:
-  - Drupal8
+  - Drupal
 tags:
   - css
   - js
