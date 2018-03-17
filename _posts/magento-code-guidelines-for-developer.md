@@ -65,6 +65,7 @@ description: Translate magento technical guidelines
 - 症状
 - 详情
 - 解决方案
+
 5.2. 抛出异常和异常解决绝不能在同一个方法
 5.3. A调用B，B抛出异常，A必须处理异常或者通过@throw来声明该异常
 5.4. 异常绝不处理消息输出，应该有处理函数来决定如何处理异常输出
@@ -90,6 +91,7 @@ description: Translate magento technical guidelines
 6.2.1. 根据CQRS原则，呈现层承载了命令和查询
 - 命令 即 Action
 - 查询 即 Layout和相应的元素(Block和UI Components)
+
 6.2.2. Request, Response, Session, Store Manager and Cookie对象必须在呈现层使用
 6.2.3. 所有Action必须返回ResultInterface的实例
 6.2.4. Action决不能引用layout中声明的block
@@ -106,6 +108,7 @@ description: Translate magento technical guidelines
 - 代码
 - 环境配置文件
 - 数据
+
 7.2. 代码包括
 - 应用程序代码库
 - xml 配置文件
@@ -114,6 +117,7 @@ description: Translate magento technical guidelines
 - 系统配置值
 - 配置范围(configuration scopes (stores/store groups/websites))
 - CMS Entity
+
 7.3. 环境配置包括应用程序服务的配置
 7.4. 数据包括业务实体数据
 7.5. 代码和环境配置绝不能放到数据中
