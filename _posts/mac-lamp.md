@@ -87,6 +87,12 @@ Include /usr/local/etc/httpd/extra/httpd-vhosts.conf
 </VirtualHost>
 
 <VirtualHost *:80>
+    <Directory /Users/your_user/Sites/grav-admin>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride None
+        Order allow,deny
+        allow from all
+    </Directory>
     DocumentRoot "/Users/your_user/Sites/grav-admin"
     ServerName grav-admin.test
 </VirtualHost>
