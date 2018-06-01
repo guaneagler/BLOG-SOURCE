@@ -12,3 +12,9 @@ description: Tips for ubuntu.
 gsettings set com.canonical.Unity.Launcher launcher-position Bottom
 ```
 > [move ubuntu unity launcher bottom of screen](https://www.lifewire.com/move-ubuntu-unity-launcher-bottom-of-screen-4050103)
+
+### 显示隐藏文件
+ctrl + H
+
+### 更换ubuntu theme
+https://www.gnome.org/
