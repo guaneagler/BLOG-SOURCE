@@ -75,9 +75,13 @@ xdebug
 # try yourself.
 {{ breakpoint() }}
 ```
-没有xdebug，可以用这个。祝你好运，我的朋友
+没有xdebug，可以用这个
 ``` yml
 {{ dump(var) }}
+```
+可以开起devel模块，使用kint方法，kint不但可以结构化输出变量，同时还能输出对象可用的方法
+```
+{{ kint(var) }}
 ```
 
 ### Theme缓存设置
@@ -103,7 +107,7 @@ Hook List
 - hook_theme_suggestions_HOOK_alter(array &$suggestions, array $variables)
 
 Hook Order
-> *显示module，之后是base theme，最后是active theme；system weight不清楚是什么*
+> *先是module，之后是base theme，最后是active theme；system weight不清楚是什么*
 > The call order is as follows: all existing suggestion alter functions are called for module A, then all for module B, etc., followed by all for any base theme(s), and finally for the active theme. *The order is determined by system weight*, then by extension (module or theme) name.
 
 > *针对性hook在通用hook之后执行*
