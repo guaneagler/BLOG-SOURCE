@@ -3,6 +3,7 @@ title: Drupal & Design Pattern
 date: 2019-03-30 15:37:04
 tags:
   - Drupal doc
+description: 'None'
 ---
 
 > Ref: [A Journey Towards Drupal 8 Development Mastery (3): Design patterns](http://icelark.com/our-thinking/journey-towards-drupal-8-development-mastery-3-design-patterns)
@@ -28,7 +29,3 @@ Drupal 8 中广泛使用的的三种设计模式
 > 命名空间 & PSR-4
 > 命名空间的引入为开源软件提供了极大的便利，它使不同开发者贡献的不同模块不会因为有相同的类名而产生冲突
 > PSR-4：遵循PSR-4的规则，就可以通过命名空间引入Class
-
-
-
-
