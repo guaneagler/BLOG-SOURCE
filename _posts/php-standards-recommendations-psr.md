@@ -555,3 +555,210 @@ interface UploadedFileInterface
     public function getClientMediaType();
 }
 ```
+
+### PSR-11 Container Interface
+标准化库如何使用container获取对象
+Container是创建对象的容器，用户可以通过container拿到需要创建的对象，而不必关心创建过程，例如拿到一个service
+使用容器获取的对象必须有一个唯一的关键字
+Container Interface的实现对象必须暴露两个方法，get和have
+```
+<?php
+namespace Psr\Container;
+
+/**
+ * Describes the interface of a container that exposes methods to read its entries.
+ */
+interface ContainerInterface
+{
+    /**
+     * Finds an entry of the container by its identifier and returns it.
+     *
+     * @param string $id Identifier of the entry to look for.
+     *
+     * @throws NotFoundExceptionInterface  No entry was found for **this** identifier.
+     * @throws ContainerExceptionInterface Error while retrieving the entry.
+     *
+     * @return mixed Entry.
+     */
+    public function get($id);
+
+    /**
+     * Returns true if the container can return an entry for the given identifier.
+     * Returns false otherwise.
+     *
+     * `has($id)` returning true does not mean that `get($id)` will not throw an exception.
+     * It does however mean that `get($id)` will not throw a `NotFoundExceptionInterface`.
+     *
+     * @param string $id Identifier of the entry to look for.
+     *
+     * @return bool
+     */
+    public function has($id);
+}
+```
+
+### PSR-13 Link definition interfaces
+定义了Link对象
+
+1. Psr\Link\LinkInterface
+```
+<?php
+
+namespace Psr\Link;
+
+/**
+ * A readable link object.
+ */
+interface LinkInterface
+{
+    public function getHref();
+    public function isTemplated();
+    public function getRels();
+    public function getAttributes();
+}
+```
+
+2. Psr\Link\EvolvableLinkInterface
+```
+<?php
+
+namespace Psr\Link;
+
+/**
+ * An evolvable link value object.
+ */
+interface EvolvableLinkInterface extends LinkInterface
+{
+    public function withHref($href);
+    public function withRel($rel);
+    public function withoutRel($rel);
+    public function withAttribute($attribute, $value);
+    public function withoutAttribute($attribute);
+}
+```
+3. Psr\Link\LinkProviderInterface
+```
+<?php
+
+namespace Psr\Link;
+
+/**
+ * A link provider object.
+ */
+interface LinkProviderInterface
+{
+    public function getLinks();
+    public function getLinksByRel($rel);
+}
+```
+4. Psr\Link\EvolvableLinkProviderInterface
+```
+<?php
+
+namespace Psr\Link;
+
+/**
+ * An evolvable link provider value object.
+ */
+interface EvolvableLinkProviderInterface extends LinkProviderInterface
+{
+    public function withLink(LinkInterface $link);
+    public function withoutLink(LinkInterface $link);
+}
+```
+
+### PSR-14: Event Dispatcher
+事件分发是一种公认的通过验证的让开发者能够更容易的将逻辑插入应用的机制
+##### 目的
+为基于事件的扩展和协作建立通用的机制，使库和组件在不同的应用中更自由的重用
+Eg：
+- 一个安全的系统会阻止用户保存/访问数据当用户没有权限的时候
+- 一个通用的整页缓存系统
+- 继承其他库的库，无论它们应用在哪个系统
+- 用于跟踪应用程序中执行的所有操作的日志包
+##### 定义
+- Event 由发射器产生的一条信息，可以是任何的php对象
+  - Stoppable Event,一种带有阻止Event传递功能的特殊事件，继承StoppableEventInterface
+- Listener 任何等待被传递给事件的php调用，可以将同一个Event传递给多个Listener
+  - 只有一个参数 Event
+  - 可以通过参数类型定义来标记它是哪一种Event的Listener
+  - 不返回值，Dispatcher也不应该接收返回值
+  - 可以调用委托其他代码来实现功能
+  - 可以对Event处理进行排队，如queue，cron等
+- Emitter 任何想发送事件的代码
+- Dispatcher Emitter提供给事件的一个服务(Service)，确保Event被分发给所有的Listener，调用Listener Provider来确定事件分发给对应的监听器
+  - 继承EventDispatcherInterface
+  - 必须调用所有Listener Provider返回的Listener
+  - 必须返回调用完所有Listener后的Event
+  - 直到处理完所有Event再返回Emmiter
+  - 如果传递给Stoppable Event，必须调用isPropagationStopped()，返回true则停止调用其他Listener
+- Listener Provider 决定哪些Listener对应哪些Event，以及Listener调用顺序，但是不直接调用Listener
+  - Order功能
+  - 根据Event的类型和实现的接口，通过反射派生适用的Listener列表。
+  - 实现一些权限控制来决定用户是否有权限访问某些Listener
+  - 提取一些扩展信息根据Event中的Reference数据
+  - Delegating its responsibility to one or more other Listener Providers using some arbitrary logic.
+  - 监听器应该使用Event名字来区分
+##### Interface
+```
+namespace Psr\EventDispatcher;
+
+/**
+ * Defines a dispatcher for events.
+ */
+interface EventDispatcherInterface
+{
+    /**
+     * Provide all relevant listeners with an event to process.
+     *
+     * @param object $event
+     *   The object to process.
+     *
+     * @return object
+     *   The Event that was passed, now modified by listeners.
+     */
+    public function dispatch(object $event);
+}
+namespace Psr\EventDispatcher;
+
+/**
+ * Mapper from an event to the listeners that are applicable to that event.
+ */
+interface ListenerProviderInterface
+{
+    /**
+     * @param object $event
+     *   An event for which to return the relevant listeners.
+     * @return iterable[callable]
+     *   An iterable (array, iterator, or generator) of callables.  Each
+     *   callable MUST be type-compatible with $event.
+     */
+    public function getListenersForEvent(object $event) : iterable;
+}
+namespace Psr\EventDispatcher;
+
+/**
+ * An Event whose processing may be interrupted when the event has been handled.
+ *
+ * A Dispatcher implementation MUST check to determine if an Event
+ * is marked as stopped after each listener is called.  If it is then it should
+ * return immediately without calling any further Listeners.
+ */
+interface StoppableEventInterface
+{
+    /**
+     * Is propagation stopped?
+     *
+     * This will typically only be used by the Dispatcher to determine if the
+     * previous listener halted propagation.
+     *
+     * @return bool
+     *   True if the Event is complete and no further listeners should be called.
+     *   False to continue calling listeners.
+     */
+    public function isPropagationStopped() : bool;
+}
+```
+
+
+
