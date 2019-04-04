@@ -762,5 +762,411 @@ interface StoppableEventInterface
 }
 ```
 
+### PSR-15 HTTP Server Request Handlers
+为HTTP server request handlers("request handlers") 和 HTTP server middleward components("middleware")定义接口，使用在PSR-7中描述的HTTP messages
+"request handlers"是web应用的基础。服务端接收request消息，处理它并产生response消息。"middleware"提供了一种隔离request/response和应用层的方式
+
+##### 定义
+- Request Handlers
+一种独立的组件，处理request，并产生response
+接口 Psr\Http\Server\RequestHandlerInterface
+- Middleware
+中间件是一种独立的组件，参与或者与其他中间件合作处理请求和产生结果
+接口 Psr\Http\Server\MiddlewareInterface
+
+##### INTERFACE
+**Psr\Http\Server\RequestHandlerInterface**
+```
+namespace Psr\Http\Server;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Handles a server request and produces a response.
+ *
+ * An HTTP request handler process an HTTP request in order to produce an
+ * HTTP response.
+ */
+interface RequestHandlerInterface
+{
+    /**
+     * Handles a request and produces a response.
+     *
+     * May call other collaborating code to generate the response.
+     */
+    public function handle(ServerRequestInterface $request): ResponseInterface;
+}
+```
+**Psr\Http\Server\MiddlewareInterface**
+```
+namespace Psr\Http\Server;
+
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+
+/**
+ * Participant in processing a server request and response.
+ *
+ * An HTTP middleware component participates in processing an HTTP message:
+ * by acting on the request, generating the response, or forwarding the
+ * request to a subsequent middleware and possibly acting on its response.
+ */
+interface MiddlewareInterface
+{
+    /**
+     * Process an incoming server request.
+     *
+     * Processes an incoming server request in order to produce a response.
+     * If unable to produce the response itself, it may delegate to the provided
+     * request handler to do so.
+     */
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $handler): ResponseInterface;
+}
+```
+
+### PSR-16: Common Interface for Caching Libraries
+为缓存项和缓存驱动提供一个一个简单却可扩展的接口
+
+##### 介绍
+
+##### 定义
+1. Caching Library - 调用cache库的方法或者类库只需要关注cache interface提供的方法，不需要关注具体的实现细节
+2. Implementing Library - 为了给调用库提供Cache服务，Cache必须实现标准。Cache必须实现以下两个Interface，Cache\CacheItemPoolInterface和Cache\CacheItemInterface，TTL必须是秒级别的
+3. TTL - Time To Live, Cache的有效时间
+4. Expiration - Cache实际过期时间
+5. Key - 一个确定一条Cache记录的唯一关键字
+6. Cache - 一个实现Psr\SimpleCache\CacheInterface接口的对象
+7. Cache Misses - 缓存未命中将返回null，因此检测是否存在一个存储的空值，这是与PSR-6的主要区别
+
+##### Interface
+```
+<?php
+
+namespace Psr\SimpleCache;
+
+interface CacheInterface
+{
+    /**
+     * Fetches a value from the cache.
+     *
+     * @param string $key     The unique key of this item in the cache.
+     * @param mixed  $default Default value to return if the key does not exist.
+     *
+     * @return mixed The value of the item from the cache, or $default in case of cache miss.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function get($key, $default = null);
+
+    /**
+     * Persists data in the cache, uniquely referenced by a key with an optional expiration TTL time.
+     *
+     * @param string                 $key   The key of the item to store.
+     * @param mixed                  $value The value of the item to store. Must be serializable.
+     * @param null|int|\DateInterval $ttl   Optional. The TTL value of this item. If no value is sent and
+     *                                      the driver supports TTL then the library may set a default value
+     *                                      for it or let the driver take care of that.
+     *
+     * @return bool True on success and false on failure.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function set($key, $value, $ttl = null);
+
+    /**
+     * Delete an item from the cache by its unique key.
+     *
+     * @param string $key The unique cache key of the item to delete.
+     *
+     * @return bool True if the item was successfully removed. False if there was an error.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function delete($key);
+
+    /**
+     * Wipes clean the entire cache's keys.
+     *
+     * @return bool True on success and false on failure.
+     */
+    public function clear();
+
+    /**
+     * Obtains multiple cache items by their unique keys.
+     *
+     * @param iterable $keys    A list of keys that can obtained in a single operation.
+     * @param mixed    $default Default value to return for keys that do not exist.
+     *
+     * @return iterable A list of key => value pairs. Cache keys that do not exist or are stale will have $default as value.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $keys is neither an array nor a Traversable,
+     *   or if any of the $keys are not a legal value.
+     */
+    public function getMultiple($keys, $default = null);
+
+    /**
+     * Persists a set of key => value pairs in the cache, with an optional TTL.
+     *
+     * @param iterable               $values A list of key => value pairs for a multiple-set operation.
+     * @param null|int|\DateInterval $ttl    Optional. The TTL value of this item. If no value is sent and
+     *                                       the driver supports TTL then the library may set a default value
+     *                                       for it or let the driver take care of that.
+     *
+     * @return bool True on success and false on failure.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $values is neither an array nor a Traversable,
+     *   or if any of the $values are not a legal value.
+     */
+    public function setMultiple($values, $ttl = null);
+
+    /**
+     * Deletes multiple cache items in a single operation.
+     *
+     * @param iterable $keys A list of string-based keys to be deleted.
+     *
+     * @return bool True if the items were successfully removed. False if there was an error.
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if $keys is neither an array nor a Traversable,
+     *   or if any of the $keys are not a legal value.
+     */
+    public function deleteMultiple($keys);
+
+    /**
+     * Determines whether an item is present in the cache.
+     *
+     * NOTE: It is recommended that has() is only to be used for cache warming type purposes
+     * and not to be used within your live applications operations for get/set, as this method
+     * is subject to a race condition where your has() will return true and immediately after,
+     * another script can remove it, making the state of your app out of date.
+     *
+     * @param string $key The cache item key.
+     *
+     * @return bool
+     *
+     * @throws \Psr\SimpleCache\InvalidArgumentException
+     *   MUST be thrown if the $key string is not a legal value.
+     */
+    public function has($key);
+}
+
+namespace Psr\SimpleCache;
+
+/**
+ * Interface used for all types of exceptions thrown by the implementing library.
+ */
+interface CacheException
+{
+}
+
+namespace Psr\SimpleCache;
+
+/**
+ * Exception interface for invalid cache arguments.
+ *
+ * When an invalid argument is passed, it must throw an exception which implements
+ * this interface.
+ */
+interface InvalidArgumentException extends CacheException
+{
+}
+```
+
+### PSR-17: HTTP Factories
+为PSR-7中的HTTP Message的对象创建提供工厂方法
+
+##### Interface
+**RequestFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\UriInterface;
+
+interface RequestFactoryInterface
+{
+    /**
+     * Create a new request.
+     *
+     * @param string $method The HTTP method associated with the request.
+     * @param UriInterface|string $uri The URI associated with the request.
+     */
+    public function createRequest(string $method, $uri): RequestInterface;
+}
+```
+
+**ResponseFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\ResponseInterface;
+
+interface ResponseFactoryInterface
+{
+    public function createResponse(int $code = 200, string $reasonPhrase = ''): ResponseInterface;
+}
+```
+
+**ServerRequestFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Message\UriInterface;
+
+interface ServerRequestFactoryInterface
+{
+    /**
+     * Create a new server request.
+     *
+     * Note that server parameters are taken precisely as given - no parsing/processing
+     * of the given values is performed. In particular, no attempt is made to
+     * determine the HTTP method or URI, which must be provided explicitly.
+     *
+     * @param string $method The HTTP method associated with the request.
+     * @param UriInterface|string $uri The URI associated with the request.
+     * @param array $serverParams An array of Server API (SAPI) parameters with
+     *     which to seed the generated request instance.
+     */
+    public function createServerRequest(string $method, $uri, array $serverParams = []): ServerRequestInterface;
+}
+```
+
+**StreamFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\StreamInterface;
+
+interface StreamFactoryInterface
+{
+    /**
+     * Create a new stream from a string.
+     *
+     * The stream SHOULD be created with a temporary resource.
+     *
+     * @param string $content String content with which to populate the stream.
+     */
+    public function createStream(string $content = ''): StreamInterface;
+
+    /**
+     * Create a stream from an existing file.
+     *
+     * The file MUST be opened using the given mode, which may be any mode
+     * supported by the `fopen` function.
+     *
+     * The `$filename` MAY be any string supported by `fopen()`.
+     *
+     * @param string $filename The filename or stream URI to use as basis of stream.
+     * @param string $mode The mode with which to open the underlying filename/stream.
+     *
+     * @throws \RuntimeException If the file cannot be opened.
+     * @throws \InvalidArgumentException If the mode is invalid.
+     */
+    public function createStreamFromFile(string $filename, string $mode = 'r'): StreamInterface;
+
+    /**
+     * Create a new stream from an existing resource.
+     *
+     * The stream MUST be readable and may be writable.
+     *
+     * @param resource $resource The PHP resource to use as the basis for the stream.
+     */
+    public function createStreamFromResource($resource): StreamInterface;
+}
+```
+
+**UploadedFileFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\StreamInterface;
+use Psr\Http\Message\UploadedFileInterface;
+
+interface UploadedFileFactoryInterface
+{
+    /**
+     * Create a new uploaded file.
+     *
+     * If a size is not provided it will be determined by checking the size of
+     * the stream.
+     *
+     * @link http://php.net/manual/features.file-upload.post-method.php
+     * @link http://php.net/manual/features.file-upload.errors.php
+     *
+     * @param StreamInterface $stream The underlying stream representing the
+     *     uploaded file content.
+     * @param int $size The size of the file in bytes.
+     * @param int $error The PHP file upload error.
+     * @param string $clientFilename The filename as provided by the client, if any.
+     * @param string $clientMediaType The media type as provided by the client, if any.
+     *
+     * @throws \InvalidArgumentException If the file resource is not readable.
+     */
+    public function createUploadedFile(
+        StreamInterface $stream,
+        int $size = null,
+        int $error = \UPLOAD_ERR_OK,
+        string $clientFilename = null,
+        string $clientMediaType = null
+    ): UploadedFileInterface;
+}
+```
+
+**UriFactoryInterface**
+```
+namespace Psr\Http\Message;
+
+use Psr\Http\Message\UriInterface;
+
+interface UriFactoryInterface
+{
+    /**
+     * Create a new URI.
+     *
+     * @param string $uri The URI to parse.
+     *
+     * @throws \InvalidArgumentException If the given URI cannot be parsed.
+     */
+    public function createUri(string $uri = '') : UriInterface;
+}
+```
+
+### PSR-18: HTTP Client
+##### 目的
+- 解耦，让开发者开发的库与HTTP Client的实现解耦，增加库的重用性降低了库版本冲突
+- 里氏兑换原则，所有的Client在发送request的时候行为相同
+
+##### 定义
+Client 是一个库，能发送PSR-7中定义的的Request Messages返回PSR-7中的Response Messages
+
+##### Interface
+```
+namespace Psr\Http\Client;
+
+use Psr\Http\Message\RequestInterface;
+use Psr\Http\Message\ResponseInterface;
+
+interface ClientInterface
+{
+    /**
+     * Sends a PSR-7 request and returns a PSR-7 response.
+     *
+     * @param RequestInterface $request
+     *
+     * @return ResponseInterface
+     *
+     * @throws \Psr\Http\Client\ClientExceptionInterface If an error happens while processing the request.
+     */
+    public function sendRequest(RequestInterface $request): ResponseInterface;
+}
+```
+
 
 
