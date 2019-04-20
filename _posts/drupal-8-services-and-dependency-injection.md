@@ -10,6 +10,10 @@ description: Drupal 8引入services的概念，使重用的功能解耦，使这
 
 > [REF: Services and dependency injection in Drupal 8](https://www.drupal.org/docs/8/api/services-and-dependency-injection/services-and-dependency-injection-in-drupal-8)
 
+Service是任何被Service Container管理的对象，-- Drupal8. Container是管理service的容器。Drupal8提出了service的概念来解耦和重用功能，并通过将service注册到容器中使service可插拔可替换。作为开发者，最佳做法是通过container来调用任何service以保证系统松耦合。[Symfony文档](https://symfony.com/doc/3.4/service_container.html)详细介绍了service
+
+作为开发者，service提供了诸如访问数据库，发邮件等功能。比起调用php默认的sql方法，我们使用container调用系统service来进行操作，这样我们可以直接调用service访问数据库而不需要担心是MySQL还是SQLlite, 或者发邮件是通过SMTP还是其他方法
+
 ### 核心Services
 核心services定义在[core/core.services.yml](https://api.drupal.org/api/drupal/core%21core.services.yml/8)和[core/lib/Drupal/Core/CoreServiceProvider.php](https://api.drupal.org/api/drupal/core%21lib%21Drupal%21Core%21CoreServiceProvider.php/8.2.x)中
 
