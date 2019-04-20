@@ -4,7 +4,7 @@ date: 2018-07-02 09:31:06
 tags:
   -- Css
 categories: Css
-descriptions: Some tips for css.
+description: Some tips for css.
 ---
 
 box 高度不接受百分比，接受px和em，默认情况下box高度是跟随内容变化的

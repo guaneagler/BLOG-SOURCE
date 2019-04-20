@@ -3,6 +3,7 @@ title: Vanessa
 date: 2018-07-13 11:14:50
 tags:
 	- drupal
+description: Front learning - todo more
 ---
 
 drupal 8 的一些默认的block模板，如site branding，包括logo、slogan、sitename，在7里面这些的修改存在于page.tpl,在8中，这是一个block单独的模板文件，参考 classy/templates/block/block--system-branding-block.html.twig
